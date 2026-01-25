@@ -22,6 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Core Logic
 from core import db_manager
+from core import ai_manager
 
 # --- Configuration & Setup ---
 
@@ -89,6 +90,12 @@ class EventRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     password: str
+
+# --- NEW: Model for AI Requests ---
+class PromoRequest(BaseModel):
+    event_name: str
+    location: str
+    date: str
 
 async def send_telegram_broadcast_task(user_ids, message, event_name):
     """
@@ -280,6 +287,17 @@ def broadcast_message(
     background_tasks.add_task(send_telegram_broadcast_task, user_ids, message, event['name'])
     
     return RedirectResponse(url="/dashboard", status_code=303)
+
+# --- NEW: AI Generation Route ---
+@app.post("/dashboard/ai-generate", dependencies=[Depends(get_current_username)])
+def generate_promo_api(request: PromoRequest):
+    """Generates promotional text using AI."""
+    promo_text = ai_manager.generate_party_promo(
+        request.event_name, 
+        request.location, 
+        request.date
+    )
+    return {"content": promo_text}
 
 @app.post("/dashboard/archive/{event_id}", dependencies=[Depends(get_current_username)])
 def archive_event_route(event_id: int):

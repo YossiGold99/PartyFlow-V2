@@ -222,8 +222,10 @@
 
                                                     {% else %}
                                                     <button class="btn btn-sm btn-light" data-bs-toggle="modal"
-                                                        data-bs-target="#broadcastModal"
-                                                        onclick="setEventId('{{ event.id }}', '{{ event.name }}')">
+                                                        data-bs-target="#broadcastModal" data-event-id="{{ event.id }}"
+                                                        data-event-name="{{ event.name }}"
+                                                        data-event-location="{{ event.location }}"
+                                                        data-event-date="{{ event.date }}" onclick="setEventId(this)">
                                                         📢 Update
                                                     </button>
 
@@ -288,9 +290,15 @@
                                     style="color: #6366f1;"></strong></p>
 
                             <div class="mb-3">
-                                <label>Your Message</label>
-                                <textarea name="message" rows="4" placeholder="Type your update here..."
-                                    required></textarea>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label>Your Message</label>
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                        onclick="generateAiPromo()">
+                                        ✨ Auto-Write with AI
+                                    </button>
+                                </div>
+                                <textarea name="message" id="broadcastMessage" rows="4"
+                                    placeholder="Type your update here..." required></textarea>
                             </div>
 
                             <div class="d-flex justify-content-end gap-2">
@@ -327,15 +335,29 @@
                 if (icon) icon.innerText = '☀️';
             }
 
-            // --- Modal Helper ---
-            function setEventId(id, name) {
+            // --- FIX: Modal Helper (Using Data Attributes) ---
+            function setEventId(button) {
+                // Safely retrieve data attributes
+                const id = button.getAttribute('data-event-id');
+                const name = button.getAttribute('data-event-name');
+                const location = button.getAttribute('data-event-location');
+                const date = button.getAttribute('data-event-date');
+
+                // Update Modal UI
                 document.getElementById('modalEventId').value = id;
-                document.getElementById('modalEventName').innerText = name;
+                const nameLabel = document.getElementById('modalEventName');
+                nameLabel.innerText = name;
+
+                // Store extra data on the DOM element for the AI function to use later
+                nameLabel.dataset.location = location;
+                nameLabel.dataset.date = date;
             }
 
             // --- Archive Logic ---
             function confirmArchive(eventId, eventName) {
-                if (confirm("Are you sure you want to move '" + eventName + "' to the archive?\nIt will be hidden from the dashboard and the bot.")) {
+                // For archive, we can keep using template literal in confirm because it's just a string prompt,
+                // but for safer code, avoid quotes inside the string manually.
+                if (confirm(`Are you sure you want to move "${eventName}" to the archive?\nIt will be hidden from the dashboard and the bot.`)) {
                     fetch(`/dashboard/archive/${eventId}`, { method: 'POST' })
                         .then(response => {
                             if (response.ok) window.location.reload();
@@ -346,12 +368,52 @@
 
             // --- Restore Logic ---
             function confirmRestore(eventId, eventName) {
-                if (confirm("Restore '" + eventName + "' back to active list?")) {
+                if (confirm(`Restore "${eventName}" back to active list?`)) {
                     fetch(`/dashboard/restore/${eventId}`, { method: 'POST' })
                         .then(response => {
                             if (response.ok) window.location.reload();
                             else alert("Error restoring event.");
                         });
+                }
+            }
+
+            // --- FIX: AI Generation Logic ---
+            async function generateAiPromo() {
+                const eventId = document.getElementById('modalEventId').value;
+                const nameLabel = document.getElementById('modalEventName');
+
+                // Retrieve data safely from innerText and dataset
+                const eventName = nameLabel.innerText;
+                const eventLocation = nameLabel.dataset.location || "Location TBD";
+                const eventDate = nameLabel.dataset.date || "Soon";
+
+                const btn = document.querySelector('button[onclick="generateAiPromo()"]');
+                const textarea = document.getElementById('broadcastMessage');
+
+                // Visual feedback
+                btn.disabled = true;
+                btn.innerText = "Generating... 🤖";
+
+                try {
+                    const response = await fetch('/dashboard/ai-generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            event_name: eventName,
+                            location: eventLocation,
+                            date: eventDate
+                        })
+                    });
+
+                    const data = await response.json();
+                    textarea.value = data.content;
+
+                } catch (error) {
+                    alert("Failed to generate text. Check console.");
+                    console.error(error);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = "✨ Auto-Write with AI";
                 }
             }
         </script>
