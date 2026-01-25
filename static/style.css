@@ -1,0 +1,271 @@
+:root {
+    --bg-body: #f8fafc;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --card-bg: #ffffff;
+    --card-border: rgba(0, 0, 0, 0.05);
+    --border-color: #f1f5f9;
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
+    --table-head-bg: #f8fafc;
+    --table-row-border: #f1f5f9;
+    --stat-icon-bg: #e0e7ff;
+    --badge-bg: #e0e7ff;
+    --badge-text: #4338ca;
+    --footer-bg: #ffffff;
+    --btn-light-bg: #ffffff;
+    --btn-light-text: #1e293b;
+    --btn-light-border: #e2e8f0;
+}
+
+/* Dark Mode Colors */
+body.dark-mode {
+    --bg-body: #0f172a;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --card-bg: #1e293b;
+    --card-border: rgba(255, 255, 255, 0.05);
+    --border-color: #334155;
+    --input-bg: #334155;
+    --input-border: #475569;
+    --table-head-bg: #1e293b;
+    --table-row-border: #334155;
+    --stat-icon-bg: #312e81;
+    --badge-bg: #312e81;
+    --badge-text: #c7d2fe;
+    --footer-bg: #1e293b;
+    --btn-light-bg: #334155;
+    --btn-light-text: #e2e8f0;
+    --btn-light-border: #475569;
+}
+
+/* --- Global Layout --- */
+body {
+    background-color: var(--bg-body);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-main);
+    margin: 0;
+    padding-bottom: 2rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* --- Super Compact Header --- */
+.page-header {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    padding: 0.8rem 0;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 10px -5px rgba(99, 102, 241, 0.4);
+}
+
+.title {
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 0;
+    font-size: 1.4rem;
+    color: white !important;
+}
+
+.subtitle {
+    opacity: 0.9;
+    font-size: 0.8rem;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* --- Cards --- */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px -1px var(--card-border);
+    background: var(--card-bg);
+    transition: transform 0.2s;
+    height: 100%;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-head {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-title {
+    color: var(--text-main);
+    font-size: 1.1rem;
+    margin-bottom: 0;
+}
+
+.card-subtitle {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+/* --- Compact Stats Cards (Top Row) --- */
+.col-md-4 .card-body {
+    padding: 0.8rem 1rem;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--stat-icon-bg);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.col-md-4 .fs-4 {
+    font-size: 1.2rem !important;
+    margin-bottom: 0;
+    line-height: 1.2;
+}
+
+.col-md-4 .card-subtitle {
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+}
+
+.row.mb-4 {
+    margin-bottom: 1rem !important;
+}
+
+/* --- Forms --- */
+.field {
+    margin-bottom: 0.8rem;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    background-color: var(--input-bg);
+    color: var(--text-main);
+    outline: none;
+    transition: 0.2s;
+}
+
+input:focus,
+textarea:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* --- Table --- */
+.table-wrap {
+    overflow-x: auto;
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead tr {
+    background-color: var(--table-head-bg);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+th,
+td {
+    padding: 0.8rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--table-row-border);
+    vertical-align: middle;
+    color: var(--text-main);
+}
+
+.badge-price {
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+/* --- Footer & Buttons --- */
+.card-footer {
+    background-color: var(--footer-bg);
+    border-top: 1px solid var(--border-color);
+    padding: 0.8rem;
+}
+
+.btn-primary {
+    background-color: #6366f1;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-primary:hover {
+    background-color: #4f46e5;
+}
+
+.btn-light,
+.pagination-btn {
+    background-color: var(--btn-light-bg);
+    color: var(--btn-light-text);
+    border: 1px solid var(--btn-light-border);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    transition: 0.2s;
+}
+
+.btn-light:hover,
+.pagination-btn:hover {
+    background-color: var(--border-color);
+    border-color: var(--text-muted);
+}
+
+body.dark-mode .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Utilities overrides */
+.text-dark {
+    color: var(--text-main) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}

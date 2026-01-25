@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PartyFlow Pro</title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet">
+    </head>
+
+    <body>
+        <script>
+            // Check immediately if user selected dark mode and apply before page render
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+        </script>
+
+        <header class="page-header">
+            <div class="container text-center position-relative">
+                <h1 class="title">
+                    <span>🎉</span> PartyFlow Pro
+                </h1>
+                <p class="subtitle">Event Management Workspace</p>
+
+                <div class="position-absolute top-0 end-0 mt-2 me-3 d-flex gap-2">
+                    <button onclick="toggleTheme()"
+                        class="btn btn-light btn-sm shadow-sm d-flex align-items-center justify-content-center"
+                        style="border-radius: 50%; width: 32px; height: 32px; padding: 0;">
+                        <span id="theme-icon" style="font-size: 1.1rem;">🌙</span>
+                    </button>
+
+                    <a href="/logout" class="btn btn-outline-light btn-sm fw-bold d-flex align-items-center"
+                        style="border-radius: 20px; border-width: 1px; font-size: 0.85rem;">
+                        🚪 Logout
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+
+            <div class="d-flex justify-content-end gap-2 mb-3">
+                <a href="/dashboard/export_csv" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm"
+                    style="font-size: 0.9rem; font-weight: 600;">
+                    📥 Events Report
+                </a>
+
+                <a href="/dashboard/export_tickets" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm"
+                    style="font-size: 0.9rem; font-weight: 600;">
+                    🎫 Guest List (Tickets)
+                </a>
+            </div>
+
+            <div class="row mb-4 g-3">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body d-flex align-items-center gap-3">
+                            <div class="stat-icon">💰</div>
+                            <div>
+                                <div class="card-subtitle">Total Revenue</div>
+                                <div class="fs-4 fw-bold text-dark">{{ stats.total_revenue }} ₪</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body d-flex align-items-center gap-3">
+                            <div class="stat-icon">🎟️</div>
+                            <div>
+                                <div class="card-subtitle">Tickets Sold</div>
+                                <div class="fs-4 fw-bold text-dark">{{ stats.tickets_sold }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body d-flex align-items-center gap-3">
+                            <div class="stat-icon">🔥</div>
+                            <div>
+                                <div class="card-subtitle">Top Event</div>
+                                <div class="fs-4 fw-bold text-dark">{{ stats.top_event }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-head">
+                            <h2 class="card-title">✨ New Event</h2>
+                            <p class="card-subtitle">Create a new party page</p>
+                        </div>
+                        <div class="card-body">
+                            <form action="/dashboard/add" method="post">
+                                <div class="field">
+                                    <label>Event Name</label>
+                                    <input type="text" name="name" placeholder="e.g. Summer Vibes 2026" required>
+                                </div>
+
+                                <div class="field">
+                                    <label>Date</label>
+                                    <input type="text" name="date" placeholder="YYYY-MM-DD" required>
+                                </div>
+
+                                <div class="field">
+                                    <label>Location</label>
+                                    <input type="text" name="location" placeholder="e.g. Tel Aviv Port" required>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label>Price (₪)</label>
+                                        <input type="number" name="price" step="0.1" placeholder="0.00" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label>Capacity</label>
+                                        <input type="number" name="total_tickets" placeholder="Max" required>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 mt-2">
+                                    🚀 Publish Event
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="card h-100 d-flex flex-column">
+
+                        <div class="card-head d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <h2 class="card-title">
+                                    {% if view_mode == 'archived' %}
+                                    📦 Archived Events
+                                    {% else %}
+                                    📅 Active Events
+                                    {% endif %}
+                                </h2>
+                                <p class="card-subtitle">
+                                    {% if view_mode == 'archived' %}
+                                    <a href="/dashboard" class="text-decoration-none">← Back to Active Events</a>
+                                    {% else %}
+                                    Manage your ongoing sales | <a href="/dashboard?view=archived"
+                                        class="text-decoration-none">View Archive 📂</a>
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            <form method="get" action="/dashboard" class="d-flex gap-2">
+                                <input type="hidden" name="view" value="{{ view_mode }}">
+                                <input type="text" name="q" value="{{ search_query }}" placeholder="Search..."
+                                    style="width: 150px;">
+                                <button type="submit" class="btn btn-primary" style="padding: 6px 12px;">🔍</button>
+                            </form>
+                        </div>
+
+                        <div class="card-body p-0 flex-grow-1">
+                            <div class="table-wrap">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 50px;">ID</th>
+                                            <th>Event Name</th>
+                                            <th style="min-width: 110px;">Date</th>
+                                            <th>Location</th>
+                                            <th>Capacity</th>
+                                            <th style="min-width: 90px;">Price</th>
+                                            <th style="min-width: 160px;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for event in events %}
+                                        <tr>
+                                            <td class="text-muted fw-bold">#{{ event.id }}</td>
+                                            <td>
+                                                <span class="fw-semibold text-dark">{{ event.name }}</span>
+                                            </td>
+                                            <td>{{ event.date }}</td>
+                                            <td>{{ event.location }}</td>
+
+                                            <td style="min-width: 130px;">
+                                                <div class="d-flex justify-content-between small mb-1">
+                                                    <span class="fw-bold">{{ event.sold }} /
+                                                        {{ event.total_tickets }}</span>
+                                                    <span class="text-muted">{{ event.percent }}%</span>
+                                                </div>
+                                                <div class="progress"
+                                                    style="height: 6px; border-radius: 4px; background-color: var(--border-color);">
+                                                    <div class="progress-bar" role="progressbar"
+                                                        style="width: {{ event.percent }}%; border-radius: 4px; background: {% if event.percent >= 90 %}#ef4444{% elif event.percent >= 70 %}#f59e0b{% else %}#10b981{% endif %};">
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted" style="font-size: 10px;">
+                                                    {{ event.remaining }} tickets left
+                                                </small>
+                                            </td>
+
+                                            <td>
+                                                <span class="badge-price">
+                                                    {{ event.price }} ₪
+                                                </span>
+                                            </td>
+
+                                            <td>
+                                                <div class="d-flex gap-2">
+
+                                                    {% if view_mode == 'archived' %}
+                                                    <button class="btn btn-sm btn-success w-100" title="Restore Event"
+                                                        onclick="confirmRestore('{{ event.id }}', '{{ event.name }}')">
+                                                        ♻️ Restore
+                                                    </button>
+
+                                                    {% else %}
+                                                    <button class="btn btn-sm btn-light" data-bs-toggle="modal"
+                                                        data-bs-target="#broadcastModal"
+                                                        onclick="setEventId('{{ event.id }}', '{{ event.name }}')">
+                                                        📢 Update
+                                                    </button>
+
+                                                    <button class="btn btn-sm btn-outline-secondary"
+                                                        title="Move to Archive"
+                                                        onclick="confirmArchive('{{ event.id }}', '{{ event.name }}')">
+                                                        📦 Archive
+                                                    </button>
+                                                    {% endif %}
+
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {% if total_pages > 1 %}
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-center align-items-center gap-3">
+
+                                {% if current_page > 1 %}
+                                <a href="/dashboard?page={{ current_page - 1 }}&q={{ search_query }}&view={{ view_mode }}"
+                                    class="pagination-btn">
+                                    ← Previous
+                                </a>
+                                {% endif %}
+
+                                <span class="text-muted small fw-bold">
+                                    Page {{ current_page }} of {{ total_pages }}
+                                </span>
+
+                                {% if current_page < total_pages %} <a
+                                    href="/dashboard?page={{ current_page + 1 }}&q={{ search_query }}&view={{ view_mode }}"
+                                    class="pagination-btn">
+                                    Next →
+                                    </a>
+                                    {% endif %}
+
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="broadcastModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow-lg" style="border-radius: 16px;">
+                    <div class="modal-header pb-0">
+                        <h5 class="modal-title fw-bold">📢 Send Broadcast</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <form action="/dashboard/broadcast" method="post">
+                            <input type="hidden" name="event_id" id="modalEventId">
+
+                            <p class="text-muted mb-3 small">Message to attendees of: <strong id="modalEventName"
+                                    style="color: #6366f1;"></strong></p>
+
+                            <div class="mb-3">
+                                <label>Your Message</label>
+                                <textarea name="message" rows="4" placeholder="Type your update here..."
+                                    required></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Send Now</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // --- Dark Mode Logic ---
+            function toggleTheme() {
+                const body = document.body;
+                const icon = document.getElementById('theme-icon');
+
+                body.classList.toggle('dark-mode');
+
+                if (body.classList.contains('dark-mode')) {
+                    localStorage.setItem('theme', 'dark');
+                    icon.innerText = '☀️';
+                } else {
+                    localStorage.setItem('theme', 'light');
+                    icon.innerText = '🌙';
+                }
+            }
+
+            // Ensure icon is correct after refresh
+            if (document.body.classList.contains('dark-mode')) {
+                const icon = document.getElementById('theme-icon');
+                if (icon) icon.innerText = '☀️';
+            }
+
+            // --- Modal Helper ---
+            function setEventId(id, name) {
+                document.getElementById('modalEventId').value = id;
+                document.getElementById('modalEventName').innerText = name;
+            }
+
+            // --- Archive Logic ---
+            function confirmArchive(eventId, eventName) {
+                if (confirm("Are you sure you want to move '" + eventName + "' to the archive?\nIt will be hidden from the dashboard and the bot.")) {
+                    fetch(`/dashboard/archive/${eventId}`, { method: 'POST' })
+                        .then(response => {
+                            if (response.ok) window.location.reload();
+                            else alert("Error archiving event.");
+                        });
+                }
+            }
+
+            // --- Restore Logic ---
+            function confirmRestore(eventId, eventName) {
+                if (confirm("Restore '" + eventName + "' back to active list?")) {
+                    fetch(`/dashboard/restore/${eventId}`, { method: 'POST' })
+                        .then(response => {
+                            if (response.ok) window.location.reload();
+                            else alert("Error restoring event.");
+                        });
+                }
+            }
+        </script>
+    </body>
+
+</html>
