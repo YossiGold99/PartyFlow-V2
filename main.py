@@ -91,11 +91,14 @@ class EventRequest(BaseModel):
 class LoginRequest(BaseModel):
     password: str
 
-# --- NEW: Model for AI Requests ---
 class PromoRequest(BaseModel):
     event_name: str
     location: str
     date: str
+
+# New model for the Chat API
+class ChatRequest(BaseModel):
+    user_question: str
 
 async def send_telegram_broadcast_task(user_ids, message, event_name):
     """
@@ -216,6 +219,25 @@ def login_api(request: LoginRequest):
     else:
         raise HTTPException(status_code=401, detail="Incorrect password")
 
+# New endpoint for AI Chat
+@app.post("/api/ask")
+def ask_ai(request: ChatRequest):
+    # Fetch active events from the database
+    events = db_manager.get_events()
+    
+    # Convert events to a simple text format for the AI
+    events_str = ""
+    for e in events:
+        events_str += f"- Event: {e['name']}, Date: {e['date']}, Location: {e['location']}, Price: {e['price']}\n"
+    
+    if not events_str:
+        events_str = "No active events at the moment."
+
+    # Send context and question to AI
+    answer = ai_manager.answer_user_question(request.user_question, events_str)
+    
+    return {"answer": answer}
+
 
 # --- Dashboard Routes (Admin) ---
 
@@ -288,7 +310,6 @@ def broadcast_message(
     
     return RedirectResponse(url="/dashboard", status_code=303)
 
-# --- NEW: AI Generation Route ---
 @app.post("/dashboard/ai-generate", dependencies=[Depends(get_current_username)])
 def generate_promo_api(request: PromoRequest):
     """Generates promotional text using AI."""

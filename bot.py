@@ -250,5 +250,32 @@ def finalize_order(message, valid_phone):
     user_data.pop(chat_id, None)
 
 
+# --- AI Chat Handler (Added) ---
+
+@bot.message_handler(func=lambda message: True)
+def handle_all_messages(message):
+    # Ignore commands starting with /
+    if message.text.startswith('/'):
+        return
+
+    user_text = message.text
+    chat_id = message.chat.id
+
+    # Visual indicator that the bot is typing/thinking
+    bot.send_chat_action(chat_id, 'typing')
+
+    try:
+        # Send question to our backend API
+        response = requests.post(f"{API_URL}/api/ask", json={"user_question": user_text})
+        
+        if response.status_code == 200:
+            answer = response.json().get("answer", "Error")
+            bot.reply_to(message, answer)
+        else:
+            bot.reply_to(message, "Oops, the server is unavailable right now. 😓")
+
+    except Exception as e:
+        bot.reply_to(message, "Communication error. Please try again.")
+
 # 6. Start the bot
 bot.infinity_polling()
