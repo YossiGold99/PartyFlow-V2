@@ -1,4 +1,5 @@
 import os
+import json
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -51,3 +52,26 @@ def answer_user_question(user_question, events_context):
     except Exception as e:
         print(f"Gemini Chat Error: {e}")
         return "Sorry, I am having trouble answering right now. Please try again later."
+
+def parse_event_details(raw_text):
+# Analyzes raw text (e.g., from WhatsApp/Facebook) and extracts event details into a JSON format.
+# Returns a dictionary with keys: name, date, location, price, total_tickets.
+    model = genai.GenerativeModel('gemini-2.5-flash')
+# Instruct the AI to return ONLY raw JSON without markdown formatting
+    prompt = (
+        f"Analyze the following event text and extract: Name, Date (YYYY-MM-DD), "
+        f"Location, Price (number only), and Total Tickets (estimate or default 100). "
+        f"Return ONLY a raw JSON object. Do not use Markdown formatting (no ```json blocks). "
+        f"Fields: name, date, location, price, total_tickets.\n\n"
+        f"Raw Text:\n{raw_text}"
+    )
+    
+    try:
+        response = model.generate_content(prompt)
+        # Clean up text in case AI added markdown code blocks despite instructions
+        clean_text = response.text.replace('```json', '').replace('```', '').strip()
+        
+        return json.loads(clean_text)
+    except Exception as e:
+        print(f"Parsing Error: {e}")
+        return None

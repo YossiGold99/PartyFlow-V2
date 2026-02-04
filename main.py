@@ -65,7 +65,7 @@ app.add_middleware(
 
 # 6. Third-Party Keys
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-YOUR_DOMAIN = "http://127.0.0.1:8000"
+YOUR_DOMAIN = "[http://127.0.0.1:8000](http://127.0.0.1:8000)"
 
 # 7. Static Files & Templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -96,16 +96,19 @@ class PromoRequest(BaseModel):
     location: str
     date: str
 
-# New model for the Chat API
 class ChatRequest(BaseModel):
     user_question: str
+
+# parsing raw text
+class ParseRequest(BaseModel):
+    raw_text: str
 
 async def send_telegram_broadcast_task(user_ids, message, event_name):
     """
     Asynchronous version: Sends messages in parallel (non-blocking).
     """
     bot_token = os.getenv("TELEGRAM_TOKEN")
-    send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    send_url = f"[https://api.telegram.org/bot](https://api.telegram.org/bot){bot_token}/sendMessage"
     
     logging.info(f"🚀 Starting FAST broadcast for '{event_name}' to {len(user_ids)} users...")
 
@@ -219,7 +222,6 @@ def login_api(request: LoginRequest):
     else:
         raise HTTPException(status_code=401, detail="Incorrect password")
 
-# New endpoint for AI Chat
 @app.post("/api/ask")
 def ask_ai(request: ChatRequest):
     # Fetch active events from the database
@@ -319,6 +321,15 @@ def generate_promo_api(request: PromoRequest):
         request.date
     )
     return {"content": promo_text}
+
+# parsing raw event text
+@app.post("/dashboard/ai-parse", dependencies=[Depends(get_current_username)])
+def parse_event_api(request: ParseRequest):
+    """Parses raw text into structured event data."""
+    data = ai_manager.parse_event_details(request.raw_text)
+    if not data:
+        raise HTTPException(status_code=400, detail="Could not extract data")
+    return data
 
 @app.post("/dashboard/archive/{event_id}", dependencies=[Depends(get_current_username)])
 def archive_event_route(event_id: int):
@@ -512,7 +523,7 @@ def check_and_send_reminders():
                     f"Location: {event['location']}\n\n"
                     f"See you there!"
                 )
-                requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json={
+                requests.post(f"[https://api.telegram.org/bot](https://api.telegram.org/bot){token}/sendMessage", json={
                     "chat_id": user_id, 
                     "text": msg, 
                     "parse_mode": "Markdown"
@@ -540,6 +551,6 @@ def generate_qr_code(ticket_id: int, event_name: str, user_name: str):
 
 def send_ticket_to_telegram(chat_id, file_path, caption):
     bot_token = os.getenv("TELEGRAM_TOKEN")
-    url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+    url = f"[https://api.telegram.org/bot](https://api.telegram.org/bot){bot_token}/sendPhoto"
     with open(file_path, "rb") as image_file:
         requests.post(url, data={"chat_id": chat_id, "caption": caption}, files={"photo": image_file})

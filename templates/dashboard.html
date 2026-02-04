@@ -99,6 +99,24 @@
                             <p class="card-subtitle">Create a new party page</p>
                         </div>
                         <div class="card-body">
+
+                            <div class="magic-box">
+                                <label>🪄 Magic Import</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="rawEventText" class="form-control"
+                                        placeholder="Paste party text here to auto-fill..."
+                                        style="border-radius: 8px 0 0 8px;">
+                                    <button class="btn btn-primary" type="button" onclick="autoFillEvent()"
+                                        style="border-radius: 0 8px 8px 0;">
+                                        Auto-Fill
+                                    </button>
+                                </div>
+                                <small id="magicStatus" class="text-success fw-bold d-none mt-2"
+                                    style="display:block; font-size: 0.75rem;">
+                                    ✨ Details extracted successfully!
+                                </small>
+                            </div>
+
                             <form action="/dashboard/add" method="post">
                                 <div class="field">
                                     <label>Event Name</label>
@@ -329,34 +347,28 @@
                 }
             }
 
-            // Ensure icon is correct after refresh
             if (document.body.classList.contains('dark-mode')) {
                 const icon = document.getElementById('theme-icon');
                 if (icon) icon.innerText = '☀️';
             }
 
-            // --- FIX: Modal Helper (Using Data Attributes) ---
+            // --- Modal Helper ---
             function setEventId(button) {
-                // Safely retrieve data attributes
                 const id = button.getAttribute('data-event-id');
                 const name = button.getAttribute('data-event-name');
                 const location = button.getAttribute('data-event-location');
                 const date = button.getAttribute('data-event-date');
 
-                // Update Modal UI
                 document.getElementById('modalEventId').value = id;
                 const nameLabel = document.getElementById('modalEventName');
                 nameLabel.innerText = name;
 
-                // Store extra data on the DOM element for the AI function to use later
                 nameLabel.dataset.location = location;
                 nameLabel.dataset.date = date;
             }
 
             // --- Archive Logic ---
             function confirmArchive(eventId, eventName) {
-                // For archive, we can keep using template literal in confirm because it's just a string prompt,
-                // but for safer code, avoid quotes inside the string manually.
                 if (confirm(`Are you sure you want to move "${eventName}" to the archive?\nIt will be hidden from the dashboard and the bot.`)) {
                     fetch(`/dashboard/archive/${eventId}`, { method: 'POST' })
                         .then(response => {
@@ -377,12 +389,11 @@
                 }
             }
 
-            // --- FIX: AI Generation Logic ---
+            // --- AI Generation Logic (Promo) ---
             async function generateAiPromo() {
                 const eventId = document.getElementById('modalEventId').value;
                 const nameLabel = document.getElementById('modalEventName');
 
-                // Retrieve data safely from innerText and dataset
                 const eventName = nameLabel.innerText;
                 const eventLocation = nameLabel.dataset.location || "Location TBD";
                 const eventDate = nameLabel.dataset.date || "Soon";
@@ -390,7 +401,6 @@
                 const btn = document.querySelector('button[onclick="generateAiPromo()"]');
                 const textarea = document.getElementById('broadcastMessage');
 
-                // Visual feedback
                 btn.disabled = true;
                 btn.innerText = "Generating... 🤖";
 
@@ -414,6 +424,47 @@
                 } finally {
                     btn.disabled = false;
                     btn.innerText = "✨ Auto-Write with AI";
+                }
+            }
+
+            // --- New Feature: Magic Import (Auto-Fill) ---
+            async function autoFillEvent() {
+                const rawText = document.getElementById('rawEventText').value;
+                const btn = document.querySelector('button[onclick="autoFillEvent()"]');
+
+                if (!rawText) return alert("Please paste some text first!");
+
+                btn.disabled = true;
+                btn.innerText = "Analyzing... 🧠";
+
+                try {
+                    const response = await fetch('/dashboard/ai-parse', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ raw_text: rawText })
+                    });
+
+                    if (!response.ok) throw new Error("Failed to parse");
+
+                    const data = await response.json();
+
+                    // Auto-fill form fields automatically
+                    if (data.name) document.querySelector('input[name="name"]').value = data.name;
+                    if (data.date) document.querySelector('input[name="date"]').value = data.date;
+                    if (data.location) document.querySelector('input[name="location"]').value = data.location;
+                    if (data.price) document.querySelector('input[name="price"]').value = data.price;
+                    if (data.total_tickets) document.querySelector('input[name="total_tickets"]').value = data.total_tickets;
+
+                    // Show success indicator
+                    document.getElementById('magicStatus').classList.remove('d-none');
+                    setTimeout(() => document.getElementById('magicStatus').classList.add('d-none'), 3000);
+
+                } catch (error) {
+                    alert("Could not extract details automatically. Please fill manually.");
+                    console.error(error);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = "Auto-Fill";
                 }
             }
         </script>
